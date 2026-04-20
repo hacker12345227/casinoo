@@ -8,15 +8,15 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: #0a0a0a;
+  background: #0b0b0b;
   color: white;
   text-align: center;
 }
 
-.card {
-  width: 360px;
+.box {
+  width: 340px;
   margin: 60px auto;
-  background: #141414;
+  background: #151515;
   padding: 20px;
   border-radius: 12px;
 }
@@ -37,27 +37,21 @@ button {
   font-size: 18px;
   margin-bottom: 10px;
 }
-
-.small {
-  color: #888;
-  font-size: 12px;
-}
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="box">
 
   <h2>🎰 VEX CASINO</h2>
 
   <div id="bal">Loading...</div>
-  <div class="small">Discord login required</div>
 
   <button class="game" onclick="coinflip('head')">🪙 HEAD</button>
   <button class="game" onclick="coinflip('tail')">🪙 TAIL</button>
 
-  <button class="login" onclick="login()">Login met Discord</button>
+  <button class="login" onclick="login()">Login Discord</button>
 
 </div>
 
@@ -88,17 +82,17 @@ async function loadBalance() {
     const res = await fetch(API + "/balance?token=" + token);
     const data = await res.json();
 
-    console.log("BAL DATA:", data);
+    console.log("BAL:", data);
 
     if (data.error) {
-      el.innerText = "❌ Login verlopen";
+      el.innerText = "❌ Session invalid";
       return;
     }
 
     el.innerText = "💰 Balance: " + data.bal + " 🧿";
 
   } catch (err) {
-    console.log("FETCH ERROR:", err);
+    console.log(err);
     el.innerText = "⚠️ Server niet bereikbaar";
   }
 }

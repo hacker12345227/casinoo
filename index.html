@@ -14,12 +14,12 @@ body {
 }
 
 header {
-  padding: 30px;
+  padding: 25px;
 }
 
 h1 {
   color: gold;
-  font-size: 42px;
+  font-size: 40px;
 }
 
 .card {
@@ -45,17 +45,18 @@ button {
 .alt { background: #333; color: white; }
 
 #roulette {
-  font-size: 30px;
+  font-size: 28px;
   margin: 10px 0;
-}
-
-.slider {
-  width: 100%;
 }
 
 .small {
   font-size: 14px;
   color: #aaa;
+}
+
+#bal {
+  font-size: 18px;
+  margin-bottom: 10px;
 }
 </style>
 </head>
@@ -69,7 +70,7 @@ button {
 
 <div class="card">
 
-  <div id="bal">⏳ Loading balance...</div>
+  <div id="bal">⏳ Loading...</div>
   <div id="streak">🔥 Streak: 0</div>
 
   <div id="roulette">🎡</div>
@@ -85,7 +86,6 @@ button {
   <button class="alt" onclick="highlow('low')">📉 Low</button>
   <button class="alt" onclick="slot()">🎰 Slot</button>
 
-  <button class="alt" onclick="shop()">🧿 Shop (x2 winst)</button>
   <button class="login" onclick="login()">Login Discord</button>
 
 </div>
@@ -101,20 +101,25 @@ const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
 
 let streak = 0;
-let multiplier = 1;
 
-// ---------------- BET SLIDER ----------------
+// ---------------- BET ----------------
 const bet = document.getElementById("bet");
 const betValue = document.getElementById("betValue");
 
 bet.oninput = () => betValue.innerText = bet.value;
+
+// ---------------- LOGIN ----------------
+function login() {
+  window.location.href = API + "/login";
+}
 
 // ---------------- BALANCE ----------------
 async function loadBalance() {
   const el = document.getElementById("bal");
 
   if (!token) {
-    el.innerText = "🔐 Login required";
+    el.innerHTML =
+      "🔐 Niet ingelogd<br><button onclick='login()'>Login met Discord</button>";
     return;
   }
 
@@ -122,48 +127,52 @@ async function loadBalance() {
     let res = await fetch(API + "/balance?token=" + token);
 
     if (!res.ok) {
-      el.innerText = "⚠️ Server error";
+      el.innerText = "⚠️ Server probleem";
       return;
     }
 
     let data = await res.json();
 
     if (data.error) {
-      el.innerText = "❌ Not logged in";
+      el.innerText = "❌ Niet ingelogd";
       return;
     }
 
     el.innerText = "💰 Balance: " + data.bal + " 🧿";
 
-  } catch {
-    el.innerText = "❌ API offline";
+  } catch (e) {
+    console.log(e);
+    el.innerText = "⚠️ Kan server niet bereiken";
   }
 }
 
-// ---------------- ROULLETTE ANIM ----------------
-function spinAnim() {
+// ---------------- ANIM ----------------
+function spin() {
   const el = document.getElementById("roulette");
   let frames = ["🎡","🎰","🪙","💰","🎲"];
 
   let i = 0;
-  let int = setInterval(() => {
+  let interval = setInterval(() => {
     el.innerText = frames[i % frames.length];
     i++;
-  }, 100);
+  }, 80);
 
-  setTimeout(() => clearInterval(int), 1200);
+  setTimeout(() => clearInterval(interval), 1200);
 }
 
 // ---------------- COINFLIP ----------------
 async function coinflip(choice) {
-  spinAnim();
+
+  if (!token) return alert("Login eerst!");
+
+  spin();
 
   let res = await fetch(API + "/coinflip?token=" + token, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       choice,
-      bet: parseInt(bet.value) * multiplier
+      bet: parseInt(bet.value)
     })
   });
 
@@ -190,11 +199,11 @@ function dice() {
   alert("🎲 Rol: " + roll);
 
   if (roll >= 4) {
-    document.getElementById("win").play();
     streak++;
+    document.getElementById("win").play();
   } else {
-    document.getElementById("lose").play();
     streak = 0;
+    document.getElementById("lose").play();
   }
 
   document.getElementById("streak").innerText = "🔥 Streak: " + streak;
@@ -204,16 +213,16 @@ function dice() {
 function highlow(type) {
   let n = Math.floor(Math.random() * 100);
 
-  let win = (type === "high" && n > 50) || (type === "low" && n <= 50);
-
   alert("🎯 Nummer: " + n);
 
+  let win = (type === "high" && n > 50) || (type === "low" && n <= 50);
+
   if (win) {
-    document.getElementById("win").play();
     streak++;
+    document.getElementById("win").play();
   } else {
-    document.getElementById("lose").play();
     streak = 0;
+    document.getElementById("lose").play();
   }
 
   document.getElementById("streak").innerText = "🔥 Streak: " + streak;
@@ -230,29 +239,14 @@ function slot() {
   alert("🎰 " + a + " | " + b + " | " + c);
 
   if (a === b && b === c) {
-    document.getElementById("win").play();
     streak += 3;
+    document.getElementById("win").play();
   } else {
-    document.getElementById("lose").play();
     streak = 0;
+    document.getElementById("lose").play();
   }
 
   document.getElementById("streak").innerText = "🔥 Streak: " + streak;
-}
-
-// ---------------- SHOP ----------------
-function shop() {
-  if (streak >= 5) {
-    multiplier = 2;
-    alert("🧿 x2 multiplier unlocked!");
-  } else {
-    alert("❌ 5 streak nodig");
-  }
-}
-
-// ---------------- LOGIN ----------------
-function login() {
-  window.location.href = API + "/login";
 }
 
 // start

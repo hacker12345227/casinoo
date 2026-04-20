@@ -2,52 +2,67 @@
 <html>
 <head>
   <title>Vex Casino 🧿</title>
+  <style>
+    body {
+      background: #0f0f0f;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      margin-top: 100px;
+    }
+
+    button {
+      padding: 15px 25px;
+      margin: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .head { background: #4CAF50; }
+    .tail { background: #2196F3; }
+  </style>
 </head>
 <body>
 
 <h1>🎰 Vex Casino</h1>
 
-<p id="bal"></p>
+<h2 id="bal">Loading...</h2>
 
-<button onclick="coinflip('head')">Head</button>
-<button onclick="coinflip('tail')">Tail</button>
+<button class="head" onclick="play('head')">Head</button>
+<button class="tail" onclick="play('tail')">Tail</button>
 
 <script>
-let bal = localStorage.getItem("bal");
+const API = "https://repressed-yarn-vacant.ngrok-free.dev";
+let user = "player1";
 
-if (!bal) {
-  bal = 1000;
-  localStorage.setItem("bal", bal);
-}
+async function loadBal() {
+  let res = await fetch(API + "/balance/" + user);
+  let data = await res.json();
 
-function update() {
   document.getElementById("bal").innerText =
-    "Balance: " + bal + " 🧿";
+    "💰 Balance: " + data.bal + " 🧿";
 }
 
-function coinflip(choice) {
-  let bet = 100;
+async function play(choice) {
+  let res = await fetch(API + "/coinflip", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      user: user,
+      choice: choice,
+      bet: 100
+    })
+  });
 
-  if (bal < bet) {
-    alert("❌ Not enough coins");
-    return;
-  }
+  let data = await res.json();
 
-  let result = Math.random() < 0.5 ? "head" : "tail";
-
-  if (result === choice) {
-    bal = Number(bal) + bet;
-    alert("🎉 WIN (" + result + ")");
-  } else {
-    bal = Number(bal) - bet;
-    alert("💀 LOSE (" + result + ")");
-  }
-
-  localStorage.setItem("bal", bal);
-  update();
+  alert(data.msg);
+  loadBal();
 }
 
-update();
+loadBal();
 </script>
 
 </body>

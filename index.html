@@ -14,7 +14,7 @@ body {
 }
 
 header {
-  padding: 25px;
+  padding: 20px;
 }
 
 h1 {
@@ -28,7 +28,7 @@ h1 {
   background: #111;
   padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 0 25px rgba(255,215,0,0.15);
+  box-shadow: 0 0 20px rgba(255,215,0,0.15);
 }
 
 button {
@@ -50,7 +50,7 @@ button {
 }
 
 .small {
-  font-size: 14px;
+  font-size: 13px;
   color: #aaa;
 }
 
@@ -70,7 +70,7 @@ button {
 
 <div class="card">
 
-  <div id="bal">⏳ Loading...</div>
+  <div id="bal">⏳ Loading balance...</div>
   <div id="streak">🔥 Streak: 0</div>
 
   <div id="roulette">🎡</div>
@@ -102,7 +102,7 @@ const token = params.get("token");
 
 let streak = 0;
 
-// ---------------- BET ----------------
+// ---------------- BET SLIDER ----------------
 const bet = document.getElementById("bet");
 const betValue = document.getElementById("betValue");
 
@@ -124,14 +124,9 @@ async function loadBalance() {
   }
 
   try {
-    let res = await fetch(API + "/balance?token=" + token);
+    const res = await fetch(API + "/balance?token=" + token);
 
-    if (!res.ok) {
-      el.innerText = "⚠️ Server probleem";
-      return;
-    }
-
-    let data = await res.json();
+    const data = await res.json();
 
     if (data.error) {
       el.innerText = "❌ Niet ingelogd";
@@ -142,11 +137,11 @@ async function loadBalance() {
 
   } catch (e) {
     console.log(e);
-    el.innerText = "⚠️ Kan server niet bereiken";
+    el.innerText = "⚠️ Server niet bereikbaar";
   }
 }
 
-// ---------------- ANIM ----------------
+// ---------------- ANIMATION ----------------
 function spin() {
   const el = document.getElementById("roulette");
   let frames = ["🎡","🎰","🪙","💰","🎲"];
@@ -167,29 +162,34 @@ async function coinflip(choice) {
 
   spin();
 
-  let res = await fetch(API + "/coinflip?token=" + token, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      choice,
-      bet: parseInt(bet.value)
-    })
-  });
+  try {
+    const res = await fetch(API + "/coinflip?token=" + token, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        choice,
+        bet: parseInt(bet.value)
+      })
+    });
 
-  let data = await res.json();
+    const data = await res.json();
 
-  if (data.msg.includes("WIN")) {
-    streak++;
-    document.getElementById("win").play();
-  } else {
-    streak = 0;
-    document.getElementById("lose").play();
+    if (data.msg.includes("WIN")) {
+      streak++;
+      document.getElementById("win").play();
+    } else {
+      streak = 0;
+      document.getElementById("lose").play();
+    }
+
+    document.getElementById("streak").innerText = "🔥 Streak: " + streak;
+
+    alert(data.msg);
+    loadBalance();
+
+  } catch (e) {
+    alert("⚠️ API error");
   }
-
-  document.getElementById("streak").innerText = "🔥 Streak: " + streak;
-
-  alert(data.msg);
-  loadBalance();
 }
 
 // ---------------- DICE ----------------
@@ -249,7 +249,7 @@ function slot() {
   document.getElementById("streak").innerText = "🔥 Streak: " + streak;
 }
 
-// start
+// START
 loadBalance();
 
 </script>

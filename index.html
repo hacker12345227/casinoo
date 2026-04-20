@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
+  <meta charset="UTF-8">
   <title>Vex Casino 🧿</title>
+
   <style>
     body {
       background: #0d0d0d;
@@ -11,34 +13,42 @@
       margin-top: 80px;
     }
 
-    .box {
+    .card {
       background: #1a1a1a;
-      padding: 20px;
+      padding: 25px;
       border-radius: 15px;
-      width: 300px;
+      width: 320px;
       margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
     }
 
     button {
-      padding: 12px 20px;
-      margin: 10px;
+      padding: 12px 18px;
+      margin: 8px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
+      font-size: 16px;
     }
 
     .login { background: #5865F2; color: white; }
-    .head { background: #4CAF50; }
-    .tail { background: #2196F3; }
+    .head { background: #4CAF50; color: white; }
+    .tail { background: #2196F3; color: white; }
+
+    .balance {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
+
 <body>
 
 <h1>🎰 Vex Casino</h1>
 
-<div class="box">
+<div class="card">
 
-  <p id="bal">Loading...</p>
+  <p class="balance" id="bal">Niet ingelogd</p>
 
   <button class="head" onclick="play('head')">Head</button>
   <button class="tail" onclick="play('tail')">Tail</button>
@@ -50,24 +60,34 @@
 </div>
 
 <script>
+
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 
-async function loadBal() {
-  let res = await fetch(API + "/balance");
-  let data = await res.json();
+async function loadBalance() {
+  try {
+    let res = await fetch(API + "/balance", {
+      credentials: "include"
+    });
 
-  if (data.error) {
-    document.getElementById("bal").innerText = "❌ Niet ingelogd";
-    return;
+    let data = await res.json();
+
+    if (data.error) {
+      document.getElementById("bal").innerText = "❌ Niet ingelogd";
+      return;
+    }
+
+    document.getElementById("bal").innerText =
+      "💰 Balance: " + data.bal + " 🧿";
+
+  } catch (e) {
+    document.getElementById("bal").innerText = "❌ API offline";
   }
-
-  document.getElementById("bal").innerText =
-    "💰 Balance: " + data.bal + " 🧿";
 }
 
 async function play(choice) {
   let res = await fetch(API + "/coinflip", {
     method: "POST",
+    credentials: "include",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       choice: choice,
@@ -78,14 +98,15 @@ async function play(choice) {
   let data = await res.json();
 
   alert(data.msg);
-  loadBal();
+  loadBalance();
 }
 
 function login() {
   window.location.href = API + "/login";
 }
 
-loadBal();
+loadBalance();
+
 </script>
 
 </body>

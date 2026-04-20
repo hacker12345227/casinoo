@@ -4,22 +4,30 @@
   <title>Vex Casino 🧿</title>
   <style>
     body {
-      background: #0f0f0f;
+      background: #0d0d0d;
       color: white;
       font-family: Arial;
       text-align: center;
-      margin-top: 100px;
+      margin-top: 80px;
+    }
+
+    .box {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 15px;
+      width: 300px;
+      margin: auto;
     }
 
     button {
-      padding: 15px 25px;
+      padding: 12px 20px;
       margin: 10px;
-      font-size: 18px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
     }
 
+    .login { background: #5865F2; color: white; }
     .head { background: #4CAF50; }
     .tail { background: #2196F3; }
   </style>
@@ -28,18 +36,30 @@
 
 <h1>🎰 Vex Casino</h1>
 
-<h2 id="bal">Loading...</h2>
+<div class="box">
 
-<button class="head" onclick="play('head')">Head</button>
-<button class="tail" onclick="play('tail')">Tail</button>
+  <p id="bal">Loading...</p>
+
+  <button class="head" onclick="play('head')">Head</button>
+  <button class="tail" onclick="play('tail')">Tail</button>
+
+  <br><br>
+
+  <button class="login" onclick="login()">Login met Discord</button>
+
+</div>
 
 <script>
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
-let user = "player1";
 
 async function loadBal() {
-  let res = await fetch(API + "/balance/" + user);
+  let res = await fetch(API + "/balance");
   let data = await res.json();
+
+  if (data.error) {
+    document.getElementById("bal").innerText = "❌ Niet ingelogd";
+    return;
+  }
 
   document.getElementById("bal").innerText =
     "💰 Balance: " + data.bal + " 🧿";
@@ -50,7 +70,6 @@ async function play(choice) {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      user: user,
       choice: choice,
       bet: 100
     })
@@ -60,6 +79,10 @@ async function play(choice) {
 
   alert(data.msg);
   loadBal();
+}
+
+function login() {
+  window.location.href = API + "/login";
 }
 
 loadBal();

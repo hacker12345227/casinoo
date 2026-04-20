@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Vex Casino V2 🧿</title>
+<title>Vex Casino 🧿</title>
 
 <style>
 body {
@@ -13,27 +13,27 @@ body {
   text-align: center;
 }
 
-.header {
+header {
   padding: 30px;
 }
 
 h1 {
   color: gold;
-  font-size: 40px;
+  font-size: 42px;
 }
 
 .card {
-  width: 360px;
+  width: 380px;
   margin: auto;
   background: #111;
   padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 0 25px rgba(255,215,0,0.2);
+  box-shadow: 0 0 25px rgba(255,215,0,0.15);
 }
 
 button {
-  padding: 10px;
   width: 100%;
+  padding: 10px;
   margin-top: 8px;
   border: none;
   border-radius: 10px;
@@ -41,143 +41,216 @@ button {
 }
 
 .login { background: #5865F2; color: white; }
-.play { background: gold; color: black; }
-.shop { background: #333; color: white; }
+.game { background: gold; color: black; }
+.alt { background: #333; color: white; }
 
 #roulette {
-  margin: 20px auto;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 5px solid gold;
-  line-height: 150px;
-  font-size: 20px;
+  font-size: 30px;
+  margin: 10px 0;
 }
 
 .slider {
   width: 100%;
+}
+
+.small {
+  font-size: 14px;
+  color: #aaa;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h1>🎰 VEX CASINO V2</h1>
-  <p>Play smart. Win big.</p>
-</div>
+<header>
+  <h1>🎰 VEX CASINO</h1>
+  <div class="small">Play smart. Win big.</div>
+</header>
 
 <div class="card">
 
-  <div id="bal">Loading...</div>
+  <div id="bal">⏳ Loading balance...</div>
   <div id="streak">🔥 Streak: 0</div>
 
   <div id="roulette">🎡</div>
 
-  <input type="range" min="1" max="1000" value="100" id="betSlider">
-  <p>Bet: <span id="betValue">100</span> 🧿</p>
+  <input type="range" min="1" max="1000" value="100" id="bet">
+  <div>Bet: <span id="betValue">100</span> 🧿</div>
 
-  <button class="play" onclick="spin('head')">HEAD</button>
-  <button class="play" onclick="spin('tail')">TAIL</button>
+  <button class="game" onclick="coinflip('head')">🪙 HEAD</button>
+  <button class="game" onclick="coinflip('tail')">🪙 TAIL</button>
 
-  <button class="shop" onclick="buySkin()">🧿 Shop Skin (x2 winst)</button>
+  <button class="alt" onclick="dice()">🎲 Dice</button>
+  <button class="alt" onclick="highlow('high')">📈 High</button>
+  <button class="alt" onclick="highlow('low')">📉 Low</button>
+  <button class="alt" onclick="slot()">🎰 Slot</button>
 
+  <button class="alt" onclick="shop()">🧿 Shop (x2 winst)</button>
   <button class="login" onclick="login()">Login Discord</button>
 
 </div>
 
-<!-- 🔊 sounds -->
-<audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
-<audio id="loseSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+<audio id="win" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+<audio id="lose" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
 
 <script>
 
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get("token");
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
 
 let streak = 0;
 let multiplier = 1;
 
-const slider = document.getElementById("betSlider");
+// ---------------- BET SLIDER ----------------
+const bet = document.getElementById("bet");
 const betValue = document.getElementById("betValue");
 
-slider.oninput = () => {
-  betValue.innerText = slider.value;
-};
+bet.oninput = () => betValue.innerText = bet.value;
 
-// 💰 balance
+// ---------------- BALANCE ----------------
 async function loadBalance() {
+  const el = document.getElementById("bal");
+
   if (!token) {
-    document.getElementById("bal").innerText = "🔐 Login required";
+    el.innerText = "🔐 Login required";
     return;
   }
 
-  let res = await fetch(API + "/balance?token=" + token);
-  let data = await res.json();
+  try {
+    let res = await fetch(API + "/balance?token=" + token);
 
-  document.getElementById("bal").innerText =
-    "💰 Balance: " + data.bal + " 🧿";
+    if (!res.ok) {
+      el.innerText = "⚠️ Server error";
+      return;
+    }
+
+    let data = await res.json();
+
+    if (data.error) {
+      el.innerText = "❌ Not logged in";
+      return;
+    }
+
+    el.innerText = "💰 Balance: " + data.bal + " 🧿";
+
+  } catch {
+    el.innerText = "❌ API offline";
+  }
 }
 
-// 🎡 roulette animatie
-function animateRoulette() {
+// ---------------- ROULLETTE ANIM ----------------
+function spinAnim() {
   const el = document.getElementById("roulette");
-  let frames = ["🎡", "🎰", "🪙", "💰", "🎲"];
+  let frames = ["🎡","🎰","🪙","💰","🎲"];
 
   let i = 0;
-  let interval = setInterval(() => {
+  let int = setInterval(() => {
     el.innerText = frames[i % frames.length];
     i++;
   }, 100);
 
-  setTimeout(() => clearInterval(interval), 1500);
+  setTimeout(() => clearInterval(int), 1200);
 }
 
-// 🎲 spin game
-async function spin(choice) {
-
-  animateRoulette();
-
-  let bet = parseInt(slider.value);
+// ---------------- COINFLIP ----------------
+async function coinflip(choice) {
+  spinAnim();
 
   let res = await fetch(API + "/coinflip?token=" + token, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({choice, bet})
+    body: JSON.stringify({
+      choice,
+      bet: parseInt(bet.value) * multiplier
+    })
   });
 
   let data = await res.json();
 
-  // 🔥 streak system
   if (data.msg.includes("WIN")) {
     streak++;
-    document.getElementById("winSound").play();
+    document.getElementById("win").play();
   } else {
     streak = 0;
-    document.getElementById("loseSound").play();
+    document.getElementById("lose").play();
   }
 
-  document.getElementById("streak").innerText =
-    "🔥 Streak: " + streak;
+  document.getElementById("streak").innerText = "🔥 Streak: " + streak;
 
   alert(data.msg);
-
   loadBalance();
 }
 
-// 🧿 shop
-function buySkin() {
-  if (streak >= 3) {
-    multiplier = 2;
-    alert("🧿 Skin activated! x2 winst");
+// ---------------- DICE ----------------
+function dice() {
+  let roll = Math.floor(Math.random() * 6) + 1;
+
+  alert("🎲 Rol: " + roll);
+
+  if (roll >= 4) {
+    document.getElementById("win").play();
+    streak++;
   } else {
-    alert("❌ Unlock met 3 winst streak");
+    document.getElementById("lose").play();
+    streak = 0;
+  }
+
+  document.getElementById("streak").innerText = "🔥 Streak: " + streak;
+}
+
+// ---------------- HIGH LOW ----------------
+function highlow(type) {
+  let n = Math.floor(Math.random() * 100);
+
+  let win = (type === "high" && n > 50) || (type === "low" && n <= 50);
+
+  alert("🎯 Nummer: " + n);
+
+  if (win) {
+    document.getElementById("win").play();
+    streak++;
+  } else {
+    document.getElementById("lose").play();
+    streak = 0;
+  }
+
+  document.getElementById("streak").innerText = "🔥 Streak: " + streak;
+}
+
+// ---------------- SLOT ----------------
+function slot() {
+  const s = ["🍒","🍋","💎","7️⃣","🍀"];
+
+  let a = s[Math.floor(Math.random()*s.length)];
+  let b = s[Math.floor(Math.random()*s.length)];
+  let c = s[Math.floor(Math.random()*s.length)];
+
+  alert("🎰 " + a + " | " + b + " | " + c);
+
+  if (a === b && b === c) {
+    document.getElementById("win").play();
+    streak += 3;
+  } else {
+    document.getElementById("lose").play();
+    streak = 0;
+  }
+
+  document.getElementById("streak").innerText = "🔥 Streak: " + streak;
+}
+
+// ---------------- SHOP ----------------
+function shop() {
+  if (streak >= 5) {
+    multiplier = 2;
+    alert("🧿 x2 multiplier unlocked!");
+  } else {
+    alert("❌ 5 streak nodig");
   }
 }
 
-// 🔐 login
+// ---------------- LOGIN ----------------
 function login() {
   window.location.href = API + "/login";
 }

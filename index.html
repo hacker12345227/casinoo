@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vex Casino 🧿</title>
+</head>
+<body>
+
+<h1>🎰 Vex Casino</h1>
+
+<p id="bal"></p>
+
+<button onclick="coinflip('head')">Head</button>
+<button onclick="coinflip('tail')">Tail</button>
+
+<script>
+let bal = localStorage.getItem("bal");
+
+if (!bal) {
+  bal = 1000;
+  localStorage.setItem("bal", bal);
+}
+
+function update() {
+  document.getElementById("bal").innerText =
+    "Balance: " + bal + " 🧿";
+}
+
+function coinflip(choice) {
+  let bet = 100;
+
+  if (bal < bet) {
+    alert("❌ Not enough coins");
+    return;
+  }
+
+  let result = Math.random() < 0.5 ? "head" : "tail";
+
+  if (result === choice) {
+    bal = Number(bal) + bet;
+    alert("🎉 WIN (" + result + ")");
+  } else {
+    bal = Number(bal) - bet;
+    alert("💀 LOSE (" + result + ")");
+  }
+
+  localStorage.setItem("bal", bal);
+  update();
+}
+
+update();
+</script>
+
+</body>
+</html>

@@ -56,10 +56,6 @@
       background: #2196F3;
       color: white;
     }
-
-    .game {
-      margin-top: 15px;
-    }
   </style>
 </head>
 
@@ -71,12 +67,10 @@
 
   <p id="bal">Loading...</p>
 
-  <div class="game">
-    <button class="head" onclick="play('head')">Head</button>
-    <button class="tail" onclick="play('tail')">Tail</button>
-  </div>
+  <button class="head" onclick="play('head')">Head</button>
+  <button class="tail" onclick="play('tail')">Tail</button>
 
-  <br>
+  <br><br>
 
   <button class="login" onclick="login()">Login met Discord</button>
 
@@ -86,20 +80,25 @@
 
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 
+// 🔑 token uit URL halen
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get("token");
+
 let loggedIn = false;
 
 // 💰 balance laden
 async function loadBalance() {
   try {
-    let res = await fetch(API + "/balance", {
-      credentials: "include"
-    });
+    if (!token) {
+      document.getElementById("bal").innerText = "❌ Niet ingelogd";
+      return;
+    }
 
+    let res = await fetch(API + "/balance?token=" + token);
     let data = await res.json();
 
     if (data.error) {
-      document.getElementById("bal").innerText = "❌ Niet ingelogd";
-      loggedIn = false;
+      document.getElementById("bal").innerText = "❌ Login nodig";
       return;
     }
 
@@ -115,14 +114,13 @@ async function loadBalance() {
 
 // 🎲 coinflip
 async function play(choice) {
-  if (!loggedIn) {
+  if (!token) {
     alert("Login eerst met Discord!");
     return;
   }
 
-  let res = await fetch(API + "/coinflip", {
+  let res = await fetch(API + "/coinflip?token=" + token, {
     method: "POST",
-    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },

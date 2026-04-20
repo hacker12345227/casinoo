@@ -100,9 +100,11 @@ const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
 
+console.log("TOKEN:", token);
+
 let streak = 0;
 
-// ---------------- BET SLIDER ----------------
+// ---------------- BET ----------------
 const bet = document.getElementById("bet");
 const betValue = document.getElementById("betValue");
 
@@ -129,15 +131,15 @@ async function loadBalance() {
     const data = await res.json();
 
     if (data.error) {
-      el.innerText = "❌ Niet ingelogd";
+      el.innerText = "❌ Niet ingelogd / sessie verlopen";
       return;
     }
 
     el.innerText = "💰 Balance: " + data.bal + " 🧿";
 
   } catch (e) {
-    console.log(e);
-    el.innerText = "⚠️ Server niet bereikbaar";
+    console.log("API ERROR:", e);
+    el.innerText = "⚠️ Server niet bereikbaar (check backend/ngrok)";
   }
 }
 
@@ -188,7 +190,8 @@ async function coinflip(choice) {
     loadBalance();
 
   } catch (e) {
-    alert("⚠️ API error");
+    console.log(e);
+    alert("⚠️ Coinflip API error");
   }
 }
 

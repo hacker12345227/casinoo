@@ -1,140 +1,180 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>Vex Casino 🧿</title>
+<meta charset="UTF-8">
+<title>Vex Casino V2 🧿</title>
 
-  <style>
-    body {
-      background: radial-gradient(circle, #111, #000);
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      margin-top: 70px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle at top, #1a1a1a, #000);
+  color: white;
+  text-align: center;
+}
 
-    .card {
-      background: #1a1a1a;
-      padding: 25px;
-      border-radius: 16px;
-      width: 340px;
-      margin: auto;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    }
+.header {
+  padding: 30px;
+}
 
-    h1 {
-      margin-bottom: 10px;
-    }
+h1 {
+  color: gold;
+  font-size: 40px;
+}
 
-    #bal {
-      font-size: 20px;
-      margin-bottom: 20px;
-      color: #00ff99;
-    }
+.card {
+  width: 360px;
+  margin: auto;
+  background: #111;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 25px rgba(255,215,0,0.2);
+}
 
-    button {
-      padding: 12px 18px;
-      margin: 8px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
-    }
+button {
+  padding: 10px;
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
 
-    .login {
-      background: #5865F2;
-      color: white;
-      width: 100%;
-    }
+.login { background: #5865F2; color: white; }
+.play { background: gold; color: black; }
+.shop { background: #333; color: white; }
 
-    .head {
-      background: #4CAF50;
-      color: white;
-    }
+#roulette {
+  margin: 20px auto;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 5px solid gold;
+  line-height: 150px;
+  font-size: 20px;
+}
 
-    .tail {
-      background: #2196F3;
-      color: white;
-    }
-  </style>
+.slider {
+  width: 100%;
+}
+</style>
 </head>
 
 <body>
 
-<h1>🎰 Vex Casino</h1>
+<div class="header">
+  <h1>🎰 VEX CASINO V2</h1>
+  <p>Play smart. Win big.</p>
+</div>
 
 <div class="card">
 
-  <p id="bal">Loading...</p>
+  <div id="bal">Loading...</div>
+  <div id="streak">🔥 Streak: 0</div>
 
-  <button class="head" onclick="play('head')">Head</button>
-  <button class="tail" onclick="play('tail')">Tail</button>
+  <div id="roulette">🎡</div>
 
-  <br><br>
+  <input type="range" min="1" max="1000" value="100" id="betSlider">
+  <p>Bet: <span id="betValue">100</span> 🧿</p>
 
-  <button class="login" onclick="login()">Login met Discord</button>
+  <button class="play" onclick="spin('head')">HEAD</button>
+  <button class="play" onclick="spin('tail')">TAIL</button>
+
+  <button class="shop" onclick="buySkin()">🧿 Shop Skin (x2 winst)</button>
+
+  <button class="login" onclick="login()">Login Discord</button>
 
 </div>
+
+<!-- 🔊 sounds -->
+<audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+<audio id="loseSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
 
 <script>
 
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 
-// 🔑 token uit URL halen
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get("token");
 
-let loggedIn = false;
+let streak = 0;
+let multiplier = 1;
 
-// 💰 balance laden
+const slider = document.getElementById("betSlider");
+const betValue = document.getElementById("betValue");
+
+slider.oninput = () => {
+  betValue.innerText = slider.value;
+};
+
+// 💰 balance
 async function loadBalance() {
-  try {
-    if (!token) {
-      document.getElementById("bal").innerText = "❌ Niet ingelogd";
-      return;
-    }
-
-    let res = await fetch(API + "/balance?token=" + token);
-    let data = await res.json();
-
-    if (data.error) {
-      document.getElementById("bal").innerText = "❌ Login nodig";
-      return;
-    }
-
-    loggedIn = true;
-
-    document.getElementById("bal").innerText =
-      "💰 Balance: " + data.bal + " 🧿";
-
-  } catch (err) {
-    document.getElementById("bal").innerText = "❌ Backend offline";
-  }
-}
-
-// 🎲 coinflip
-async function play(choice) {
   if (!token) {
-    alert("Login eerst met Discord!");
+    document.getElementById("bal").innerText = "🔐 Login required";
     return;
   }
 
+  let res = await fetch(API + "/balance?token=" + token);
+  let data = await res.json();
+
+  document.getElementById("bal").innerText =
+    "💰 Balance: " + data.bal + " 🧿";
+}
+
+// 🎡 roulette animatie
+function animateRoulette() {
+  const el = document.getElementById("roulette");
+  let frames = ["🎡", "🎰", "🪙", "💰", "🎲"];
+
+  let i = 0;
+  let interval = setInterval(() => {
+    el.innerText = frames[i % frames.length];
+    i++;
+  }, 100);
+
+  setTimeout(() => clearInterval(interval), 1500);
+}
+
+// 🎲 spin game
+async function spin(choice) {
+
+  animateRoulette();
+
+  let bet = parseInt(slider.value);
+
   let res = await fetch(API + "/coinflip?token=" + token, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      choice: choice,
-      bet: 100
-    })
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({choice, bet})
   });
 
   let data = await res.json();
 
+  // 🔥 streak system
+  if (data.msg.includes("WIN")) {
+    streak++;
+    document.getElementById("winSound").play();
+  } else {
+    streak = 0;
+    document.getElementById("loseSound").play();
+  }
+
+  document.getElementById("streak").innerText =
+    "🔥 Streak: " + streak;
+
   alert(data.msg);
 
   loadBalance();
+}
+
+// 🧿 shop
+function buySkin() {
+  if (streak >= 3) {
+    multiplier = 2;
+    alert("🧿 Skin activated! x2 winst");
+  } else {
+    alert("❌ Unlock met 3 winst streak");
+  }
 }
 
 // 🔐 login

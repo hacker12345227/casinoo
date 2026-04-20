@@ -1,208 +1,151 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>Vex Casino 🧿</title>
+  <meta charset="UTF-8">
+  <title>Vex Casino 🧿</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: radial-gradient(circle at top, #1a1a1a, #000);
-  color: white;
-}
+  <style>
+    body {
+      background: radial-gradient(circle, #111, #000);
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      margin-top: 70px;
+    }
 
-/* NAVBAR */
-.nav {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  background: #111;
-  padding: 15px;
-}
+    .card {
+      background: #1a1a1a;
+      padding: 25px;
+      border-radius: 16px;
+      width: 340px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    }
 
-.nav button {
-  background: #222;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-}
+    h1 {
+      margin-bottom: 10px;
+    }
 
-.nav button:hover {
-  background: #333;
-}
+    #bal {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #00ff99;
+    }
 
-/* SECTIONS */
-.page {
-  display: none;
-  text-align: center;
-  padding: 40px;
-}
+    button {
+      padding: 12px 18px;
+      margin: 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
 
-.active {
-  display: block;
-}
+    .login {
+      background: #5865F2;
+      color: white;
+      width: 100%;
+    }
 
-/* CARD */
-.card {
-  background: #1b1b1b;
-  padding: 20px;
-  border-radius: 15px;
-  width: 350px;
-  margin: auto;
-  box-shadow: 0 0 20px #000;
-}
+    .head {
+      background: #4CAF50;
+      color: white;
+    }
 
-/* BUTTONS */
-.btn {
-  padding: 12px 18px;
-  margin: 8px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
+    .tail {
+      background: #2196F3;
+      color: white;
+    }
 
-.login { background:#5865F2; color:white; }
-.head { background:#4CAF50; color:white; }
-.tail { background:#2196F3; color:white; }
-.spin { background:#ff9800; color:black; }
-
-/* ROULETTE WHEEL */
-.wheel {
-  margin: auto;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  border: 8px solid gold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  background: conic-gradient(
-    red 0 18%,
-    black 18% 36%,
-    red 36% 54%,
-    black 54% 72%,
-    red 72% 90%,
-    green 90% 100%
-  );
-  transition: transform 3s ease;
-}
-</style>
+    .game {
+      margin-top: 15px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="nav">
-  <button onclick="show('home')">🏠 Home</button>
-  <button onclick="show('coinflip')">🪙 Coinflip</button>
-  <button onclick="show('roulette')">🎰 Roulette</button>
-</div>
+<h1>🎰 Vex Casino</h1>
 
-<!-- HOME -->
-<div id="home" class="page active">
-  <h1>🎰 Vex Casino</h1>
-  <div class="card">
-    <p id="bal">Loading...</p>
-    <button class="login" onclick="login()">Login met Discord</button>
+<div class="card">
+
+  <p id="bal">Loading...</p>
+
+  <div class="game">
+    <button class="head" onclick="play('head')">Head</button>
+    <button class="tail" onclick="play('tail')">Tail</button>
   </div>
-</div>
 
-<!-- COINFLIP -->
-<div id="coinflip" class="page">
-  <h1>🪙 Coinflip</h1>
+  <br>
 
-  <div class="card">
-    <p id="bal2"></p>
+  <button class="login" onclick="login()">Login met Discord</button>
 
-    <button class="head" onclick="coin('head')">Head</button>
-    <button class="tail" onclick="coin('tail')">Tail</button>
-  </div>
-</div>
-
-<!-- ROULETTE -->
-<div id="roulette" class="page">
-  <h1>🎰 Roulette</h1>
-
-  <div class="card">
-
-    <div id="wheel" class="wheel">SPIN</div>
-
-    <br>
-
-    <button class="spin" onclick="spin()">SPIN</button>
-
-    <p id="result"></p>
-  </div>
 </div>
 
 <script>
 
 const API = "https://repressed-yarn-vacant.ngrok-free.dev";
 
-let user = "player1";
+let loggedIn = false;
 
-/* NAV */
-function show(page) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
+// 💰 balance laden
+async function loadBalance() {
+  try {
+    let res = await fetch(API + "/balance", {
+      credentials: "include"
+    });
+
+    let data = await res.json();
+
+    if (data.error) {
+      document.getElementById("bal").innerText = "❌ Niet ingelogd";
+      loggedIn = false;
+      return;
+    }
+
+    loggedIn = true;
+
+    document.getElementById("bal").innerText =
+      "💰 Balance: " + data.bal + " 🧿";
+
+  } catch (err) {
+    document.getElementById("bal").innerText = "❌ Backend offline";
+  }
 }
 
-/* BALANCE */
-async function loadBal() {
-  let res = await fetch(API + "/balance", {credentials:"include"});
-  let data = await res.json();
-
-  if (data.error) {
-    document.getElementById("bal").innerText = "❌ Niet ingelogd";
+// 🎲 coinflip
+async function play(choice) {
+  if (!loggedIn) {
+    alert("Login eerst met Discord!");
     return;
   }
 
-  document.getElementById("bal").innerText =
-    "💰 Balance: " + data.bal + " 🧿";
+  let res = await fetch(API + "/coinflip", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      choice: choice,
+      bet: 100
+    })
+  });
 
-  document.getElementById("bal2").innerText =
-    "💰 Balance: " + data.bal + " 🧿";
+  let data = await res.json();
+
+  alert(data.msg);
+
+  loadBalance();
 }
 
-/* LOGIN */
+// 🔐 login
 function login() {
   window.location.href = API + "/login";
 }
 
-/* COINFLIP */
-async function coin(choice) {
-  let res = await fetch(API + "/coinflip", {
-    method:"POST",
-    credentials:"include",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({choice, bet:100})
-  });
-
-  let data = await res.json();
-  alert(data.msg);
-  loadBal();
-}
-
-/* ROULETTE */
-function spin() {
-  let wheel = document.getElementById("wheel");
-
-  let deg = Math.floor(Math.random()*3600);
-  wheel.style.transform = "rotate(" + deg + "deg)";
-
-  let result = ["red","black","red","black","red","green"];
-  let pick = result[Math.floor(Math.random()*result.length)];
-
-  setTimeout(() => {
-    document.getElementById("result").innerText =
-      "🎯 Result: " + pick.toUpperCase();
-  }, 3000);
-}
-
-loadBal();
+// start
+loadBalance();
 
 </script>
 
